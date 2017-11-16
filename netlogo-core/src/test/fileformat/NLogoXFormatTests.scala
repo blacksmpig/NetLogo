@@ -13,7 +13,7 @@ import
 
 import
   org.nlogo.{ api, core },
-    core.{ Button, DummyCompilationEnvironment, DummyExtensionManager, model, Model, Shape, View, Widget },
+    core.{ Button, DummyCompilationEnvironment, DummyExtensionManager, model, Model, ModelInfo, Shape, View, Widget },
       model.{ Attribute, Element, Node, Text, XmlShape },
       Shape.{ LinkShape, VectorShape },
     api.ModelSettings
@@ -97,7 +97,8 @@ class NLogoXFormatIOTest extends FunSuite {
     pending
     // TODO: This does need to pass long-term, but won't pass until our xml wrapper writes CDATA
     // :P
-    // Check out DOM, JDOM, dom4j
+    // (See https://github.com/scala/scala-xml/issues/76)
+    // Check out DOM, JDOM, dom4j as possibilities
     // assert(Files.readAllLines(Paths.get(result.get)) == Files.readAllLines(Paths.get(sampleUri)))
   }
   test("invalid nlogox file gives error about model") {
@@ -190,4 +191,13 @@ class NLogoXModelSettingsComponentTest extends NLogoXFormatTest[ModelSettings] {
   testDeserializes("snap-to-grid set to true", Elem("modelSettings", Seq(Attr("snapToGrid", "true")), Seq()), ModelSettings(true))
   testRoundTripsObjectForm("snap-to-grid", ModelSettings(true))
   testRoundTripsObjectForm("non-snap-to-grid", ModelSettings(false))
+}
+
+class NLogoXModelInfoComponentTest extends NLogoXFormatTest[ModelInfo] {
+  def subject = new NLogoXModelInfo(Factory)
+  def modelComponent(model: Model): ModelInfo = model.modelInfo
+  def attachComponent(info: ModelInfo): Model =
+    Model().withOptionalSection(ModelInfo.sectionKey, Some(info), ModelInfo.empty)
+
+  testRoundTripsObjectForm("sample model info", ModelInfo("Model Name", Seq("a", "b")))
 }

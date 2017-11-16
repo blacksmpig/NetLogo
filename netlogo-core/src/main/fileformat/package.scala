@@ -47,6 +47,7 @@ package object fileformat {
   def basicLoader: ConfigurableModelLoader =
     new ConfigurableModelLoader()
       .addFormat[NLogoXFormat.Section, NLogoXFormat](new NLogoXFormat(ScalaXmlElementFactory))
+      .addSerializer[NLogoXFormat.Section, NLogoXFormat](new NLogoXModelInfo(ScalaXmlElementFactory))
       .addSerializer[NLogoXFormat.Section, NLogoXFormat](new NLogoXLabFormat(ScalaXmlElementFactory))
       .addSerializer[NLogoXFormat.Section, NLogoXFormat](new NLogoXModelSettings(ScalaXmlElementFactory))
       .addSerializer[NLogoXFormat.Section, NLogoXFormat](new NLogoXPreviewCommandsFormat(ScalaXmlElementFactory))
@@ -57,6 +58,7 @@ package object fileformat {
   def standardLoader(literalParser: LiteralParser) = {
     new ConfigurableModelLoader()
       .addFormat[NLogoXFormat.Section, NLogoXFormat](new NLogoXFormat(ScalaXmlElementFactory))
+      .addSerializer[NLogoXFormat.Section, NLogoXFormat](new NLogoXModelInfo(ScalaXmlElementFactory))
       .addSerializer[NLogoXFormat.Section, NLogoXFormat](new NLogoXLabFormat(ScalaXmlElementFactory))
       .addSerializer[NLogoXFormat.Section, NLogoXFormat](new NLogoXModelSettings(ScalaXmlElementFactory))
       .addSerializer[NLogoXFormat.Section, NLogoXFormat](new NLogoXPreviewCommandsFormat(ScalaXmlElementFactory))
