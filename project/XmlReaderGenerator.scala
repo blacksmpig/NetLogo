@@ -7,7 +7,8 @@ import scala.xml.{ Attribute, Elem, Node, NodeSeq, Text, XML }
 
 object XmlReaderGenerator {
   lazy val parserSettings = Seq(sourceGenerators in Compile += coreTask.taskValue)
-  lazy val bspaceSettings = Seq(sourceGenerators in Compile += bspaceTask.taskValue)
+  lazy val additionalSectionsSettings =
+    Seq(sourceGenerators in Compile += additionalSectionsTask.taskValue)
 
   // Big list of TODOs:
   //
@@ -59,6 +60,14 @@ object XmlReaderGenerator {
          "org.nlogo.core",
          {(s: String) => s"XmlShape.coerceLinkShape($s)"}),
        generator(streams.value.log.info(_),
+          autogenRoot.value / "fileformat" / "netlogo.xsd",
+          (sourceManaged in Compile).value,
+          "org.nlogo.core.model",
+          "modelInfo",
+          "",
+          "org.nlogo.core",
+          identity),
+       generator(streams.value.log.info(_),
          autogenRoot.value / "fileformat" / "netlogo.xsd",
          (sourceManaged in Compile).value,
          "org.nlogo.core.model",
@@ -69,7 +78,7 @@ object XmlReaderGenerator {
      )
     }
 
-    lazy val bspaceTask =
+    lazy val additionalSectionsTask =
       Def.task {
         Seq(
           generator(streams.value.log.info(_),
@@ -277,6 +286,7 @@ object XmlReaderGenerator {
           "xsd:string"             -> String,
           "xsd:double"             -> Double,
           "BigDecimal"             -> BigDecimal,
+          "CommaSeparatedList"     -> CommaSeparatedList,
           "svg:StrokeDashArrayValueType" -> DashArray
         )
 
@@ -297,6 +307,10 @@ object XmlReaderGenerator {
       case object Color extends DataType {
         val attributeReaderName = Some("colorReader")
         val className = "RgbColor"
+      }
+      case object CommaSeparatedList extends DataType {
+        val attributeReaderName = None
+        val className = "Seq[String]"
       }
       case object DashArray extends DataType {
         val attributeReaderName = Some("dashArrayReader")
@@ -671,7 +685,8 @@ object XmlReaderGenerator {
 
     def processReadElement(elemName: String, min: Int, max: Option[Int], default: Option[String], tpe: DataType)(implicit types: Map[String, ComplexType], generator: ReaderGenerator): String = {
       (min, max, default, tpe) match {
-        case (0, Some(1), None, DataType.String)    => ".map(_.flatMap(e => XmlReader.textToOption(XmlReader.childText(e))))"
+        case (0, Some(1), None, DataType.String) =>
+          ".map(_.flatMap(e => XmlReader.textToOption(XmlReader.childText(e))))"
         case (0, Some(1), Some(defaultString), DataType.String) =>
           val default = tpe.defaultValue(defaultString)
           s".map(_.map(e => XmlReader.childText(e)).getOrElse(${default}))"
@@ -685,6 +700,7 @@ object XmlReaderGenerator {
           val default = tpe.defaultValue(defaultString)
           s".flatMap[${tpe.className}](_.map(e => XmlReader.childText(e)).map(${reader}).getOrElse(Valid(${default})))"
         case (_, _, _, DataType.String)             => ".map(XmlReader.childText _)"
+        case (_, _, _, DataType.CommaSeparatedList) => ".map(XmlReader.commaSeparatedList _)"
         case (_, _, _, DataType.DeferredType(name)) =>
           s".flatMap(new ${name.capitalize}Reader(${elemName.quoted}).read)"
         case (_, _, _, DataType.NestedComplexType(content)) =>
@@ -918,7 +934,9 @@ object XmlReaderGenerator {
           exp
             .applyTo((s: String) => s"XmlReader.formatDouble(${s})")
             .applyTo(generateAndAddElement(_), ElementType)
-        case DataType.DeferredType(tName)        =>
+        case DataType.CommaSeparatedList =>
+          exp.applyTo((s: String) => s"""${s}.mkString(",")""").applyTo(generateAndAddElement(_), ElementType)
+        case DataType.DeferredType(tName) =>
           exp.applyTo(writeType(tName, types(tName).typeName), ElementType)
         case DataType.NestedComplexType(content) =>
           val subTypeGenerator = new WriterGenerator(ComplexType(s"${name}", false, content), generator.methodIndentLevel)

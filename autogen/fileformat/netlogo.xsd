@@ -1,24 +1,6 @@
 <?xml version="1.0"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  xmlns:svg="http://www.w3.org/2000/svg" >
-
-  <xsd:element name="NetLogoFile">
-    <xsd:complexType>
-      <xsd:sequence>
-        <xsd:element name="code" type="CodeSection" />
-        <xsd:element name="info" type="xsd:string" />
-        <xsd:element name="widgets" type="WidgetList" />
-        <xsd:element name="shapes">
-          <xsd:complexType>
-            <xsd:sequence>
-              <xsd:element name="shapes" type="turtleShape" maxOccurs="unbounded" />
-              <xsd:element name="linkShapes" type="linkShape" maxOccurs="unbounded" />
-            </xsd:sequence>
-          </xsd:complexType>
-        </xsd:element>
-      </xsd:sequence>
-    </xsd:complexType>
-  </xsd:element>
+  xmlns:svg="http://www.w3.org/2000/svg">
 
   <xsd:complexType name="Widget">
     <xsd:choice maxOccurs="unbounded">
@@ -787,6 +769,24 @@
     </xsd:sequence>
   </xsd:complexType>
 
+  <!-- This is based in a very loose way on the DCMI standards for metadata
+       (http://dublincore.org/documents/dc-xml-guidelines/). When additional
+       metadata is needed, it is recommended that names and values conform to
+       DCMI standards. -->
+  <xsd:complexType name="modelInfo">
+    <xsd:annotation>
+      <xsd:appinfo className="ModelInfo" />
+    </xsd:annotation>
+    <xsd:all>
+      <xsd:element name="title" type="xsd:string" default="" maxOccurs="1" />
+      <xsd:element name="subject" type="CommaSeparatedList" default="" maxOccurs="1">
+        <xsd:annotation>
+          <xsd:appinfo fieldName="tags" />
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:all>
+  </xsd:complexType>
+
   <xsd:complexType name="modelSettings">
     <xsd:annotation>
       <xsd:appinfo className="ModelSettings" />
@@ -842,16 +842,16 @@
     <xsd:attribute name="marked" type="xsd:boolean" use="required" />
   </xsd:attributeGroup>
 
-  <xsd:complexType name="CodeSection" >
-    <xsd:simpleContent>
-      <xsd:extension base="xsd:string" />
-    </xsd:simpleContent>
-  </xsd:complexType>
-
   <xsd:simpleType name="BigDecimal">
     <xsd:annotation>
       <xsd:documentation>Decimal type with arbitrary precision.</xsd:documentation>
     </xsd:annotation>
     <xsd:restriction base="double"/>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="CommaSeparatedList">
+    <xsd:annotation>
+      <xsd:documentation>List of string elements separated by commas.</xsd:documentation>
+    </xsd:annotation>
   </xsd:simpleType>
 </xsd:schema>

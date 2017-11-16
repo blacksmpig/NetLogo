@@ -81,6 +81,11 @@ object XmlReader {
       case t: Text => t.text
     }.mkString("")
 
+  def commaSeparatedList(xml: Element): Seq[String] =
+    xml.children.collect {
+      case t: Text => t.text.split(",").map(_.trim).toSeq
+    }.headOption.getOrElse(Seq.empty[String])
+
   def textToOption(s: String): Option[String] =
     if (s.isEmpty) None
     else Some(s)
